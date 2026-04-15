@@ -1,0 +1,170 @@
+nav {
+    margin: 0;
+    padding: 0;
+    background-color: #d2e2f5;
+    display: flex;
+    flex-wrap: wrap;
+    height: 60px
+}
+
+nav li {
+    float: left;
+    list-style-type: none;
+}
+nav .acc {
+    margin: 10px;
+    margin-left: auto;
+    float: right;
+    list-style-type: none;
+    
+}
+nav li a {
+    display: block;
+    color: black;
+    text-align: center;
+    padding: 10px 20px;
+    text-decoration: none;
+    border-radius: 20px;
+    background-color: #f8fdff;
+    margin: 0 10px;
+}
+
+nav li a:hover {
+    background-color: #acc0d8;
+}
+
+
+ul {
+    margin: 10px;
+}
+
+
+body {
+    margin: 0;
+    background-color: #f8fdff;
+}
+
+
+/*---------*/
+.home_row1 {
+    grid-template-columns: 1fr 1.5fr;
+    display: grid;
+    margin: 70px;
+    gap: 110px;
+}
+
+.notepad_block {
+  border: 2px solid black;
+  position: relative;
+  text-align: left;
+  max-width: 100%;
+}
+.notepad_img {
+  display: block;
+  width: 100%;
+}
+
+.block2 {
+  border: 2px solid black;
+}
+.to_do_list {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, 0);
+}
+.notepad {
+  position: absolute;
+  top: 15%;
+  left: 10%;
+  width: 80%;
+}
+
+
+#myList {
+  margin: 0;
+  padding: 0;
+}
+
+#myList li {
+  list-style: none;
+  margin: 0 0 8px 0;
+  padding: 0;
+}
+
+.item-row,
+.input-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bullet {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.item-text {
+  flex: 1;
+  font-size: 16px;
+  outline: none;
+}
+
+.item-text[contenteditable="true"] {
+  padding: 2px 0;
+}
+
+#itemInput {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 16px;
+  padding: 2px 0;
+  color: #222;
+}
+
+#itemInput::placeholder {
+  color: #888;
+}
+
+button {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0;
+}
+
+
+
+/* login page */
+
+.login {
+  background-color: #d2e2f5;
+  border: 1px solid black;
+  display: grid;
+  place-items: center;
+  margin: 8% 25%;
+  
+  border-radius: 20px;
+  padding: 2.5% 0  ;
+}
+h1 {
+  margin: 0;
+}
+.login_box {
+  background-color: #efeffb;
+  border: 1px solid black;
+  display: grid;
+  justify-content: center;
+  align-items: center;
+  border-radius: 20px;
+  padding: 25%;
+  margin: 2.5%;
+}
+
+.username_box {
+  background-color: white;
+  color: black;
+}

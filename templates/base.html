@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/main.css') }}"
+    />
+    <link
+      rel="manifest"
+      href="{{ url_for('static', filename='js/manifest.json') }}"
+    />
+    <meta name="theme-color" content="#333333" />
+
+    <title>{% block title %}Study App{% endblock %}</title>
+  </head>
+
+  <body>
+    <header>
+      <div class="header-top">
+        <a class="logo_button" href="{{ url_for('index') }}">
+          <img
+            class="logo"
+            src=""
+            alt="Logo"
+          />
+        </a>
+
+
+      </div>
+
+      <nav>
+        <ul>
+          <li><a href="">Home</a></li>
+          <li><a href="">Calendar</a></li>
+          <li><a href="">Study Session</a></li>
+
+        </ul>
+      </nav>
+    </header>
+
+    <main>{% block content %}{% endblock %}</main>
+
+
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  </body>
+</html>
