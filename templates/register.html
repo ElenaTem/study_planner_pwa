@@ -26,10 +26,21 @@
         <h1>Login Or Sign Up</h1>
 
         <div class="login_box">
-            <p>Username</p>
-            <div class="username_box">text </div>
-            <p>Password</p>
-            <div class="password_box">text</div>
+            <form action="/register" method="POST">
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" required>
+                <br><br>
+
+                <label for="user_email">Email:</label>
+                <input type="email" id="user_email" name="user_email" required>
+                <br><br>
+
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required>
+                <br><br>
+
+                <button type="submit">Register</button>
+            </form>
         </div>
 
 
