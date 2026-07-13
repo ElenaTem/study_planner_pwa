@@ -7,7 +7,24 @@
 </head>
 <body>
     <header>
+        <nav>
+            <div class = "logo_button">
+                <a>
+                    <img src = "" alt = "Logo"/>
+                </a>
+
+            </div>
+
         
+            <ul>
+                <li><a href="{{ url_for('home') }}">Home</a></li>
+                <li><a href="{{ url_for('calendar') }}">Calendar</a></li>
+                <li><a href="{{ url_for('timer') }}">Study Session</a></li>
+            </ul>
+
+            <li class="acc"><a href="">Account</a></li>
+            
+        </nav>
     </header>
 </body>
 </html>

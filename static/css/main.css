@@ -168,3 +168,25 @@ h1 {
   background-color: white;
   color: black;
 }
+
+
+
+/** STUDY SESSION PAGE**/
+
+.main_box {
+  border: 1px solid black;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 10%;
+  border-radius: 20px;
+  background-color: #DAE7F7;
+}
+
+.timer_box_main {
+  border: 1px solid black;
+  margin: 20px;
+  padding: 20px;
+  border-radius: 20px;
+  background-color: #96C3FF;
+}
