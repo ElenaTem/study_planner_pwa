@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link
         rel="stylesheet"
-        href="../static/css/main.css"
-    />
+        href="{{ url_for('static', filename='css/main.css') }}"
+    >
     <title>Document</title>
 </head>
 <body>
@@ -22,11 +22,11 @@
         </nav>
     </header>
 
-    <div class="login">
-        <h1>Login Or Sign Up</h1>
+    <div class="login_signup">
+        <h1>Sign Up</h1>
 
-        <div class="login_box">
-            <form action="/register" method="POST" autocomplete="off">
+        <div class="login_signup_box">
+            <form action="{{ url_for('sign_up') }}" method="POST" autocomplete="off">
                 <label for="username">Username:</label>
                 <input type="text" id="username" name="username" required>
                 <br><br>
@@ -39,11 +39,13 @@
                 <input type="password" id="password" name="password" required>
                 <br><br>
 
-                <button type="submit">Register</button>
+                <button type="submit">Sign Up</button>
 
                 {% if error %}
                     <div class="error-message">{{ error }}</div>
                 {% endif %}
+
+                <p class="small_text">Have an account?<a href="{{ url_for('login') }}">Login</a></p>
             </form>
         </div>
 

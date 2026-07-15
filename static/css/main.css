@@ -138,52 +138,81 @@ button {
 
 
 
-/* login page */
+/* login and signup pages */
 
-.login {
+.login_signup {
   background-color: #d2e2f5;
   border: 1px solid black;
   display: grid;
   place-items: center;
-  margin: 8% 25%;
-  
+  margin: 6% 30%;
   border-radius: 20px;
-  padding: 2.5% 0  ;
+  padding: 2.5% 0;
 }
+
 h1 {
   margin: 0;
 }
-.login_box {
+
+.login_signup_box {
   background-color: #efeffb;
   border: 1px solid black;
   display: grid;
-  justify-content: center;
+
+  grid-template-columns: 1fr;
+  justify-items: center;
   align-items: center;
+
   border-radius: 20px;
-  padding: 25%;
+  padding: 10% 0;
   margin: 2.5%;
+  width: 100%;
+  max-width: 80%;
+}
+.login_signup_box label {
+  font-size: 18px;
 }
 
+.login_signup_box button {
+  width: 100%;
+  padding: 14px;
+  font-size: 18px;
+}
+
+.login_signup_box form {
+  width: 70%
+}
 .username_box {
   background-color: white;
   color: black;
 }
 
+.login_signup_box input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 5px;
+  margin-top: 6px;
+}
 
+.small_text {
+  font-size: 15px;
+  text-align: center;
+}
 
 /** STUDY SESSION PAGE**/
 
-.main_box {
+.main_timer_box {
   border: 1px solid black;
   display: flex;
   justify-content: center;
   align-items: center;
-  margin: 10%;
+  margin: 10% 20%;
+  
   border-radius: 20px;
   background-color: #DAE7F7;
 }
 
-.timer_box_main {
+.time_picker_box {
   border: 1px solid black;
   margin: 20px;
   padding: 20px;
