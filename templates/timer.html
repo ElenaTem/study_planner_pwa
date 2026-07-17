@@ -32,12 +32,75 @@
     </header>
 
     <div class="main_timer_box">
-        <div class="time_picker_box">
-            <p>Customise Your Study Session</p>
-            <button><p>Start Studying!</p></button>
+        <div class="tree_scene" aria-hidden="true">
+            <img
+                id="studyTree"
+                class="tree_image"
+                src="{{ url_for('static', filename='images/tree_7.png') }}"
+                alt=""
+            >
+    
+            <img
+                class="grass_image"
+                src="{{ url_for('static', filename='images/grass.png') }}"
+                alt=""
+            >
         </div>
+        
+        <div class="time_picker_box">
+            <h2>Customise Your Study Session</h2>
+
+
+            <div class="duration-row">
+                <p>Length Of Study Session:</p>
+        
+                <div class="time-control">
+                    <div class="arrow-controls">
+                        <button type="button" id="increaseHours" class="arrow-button" aria-label="Increase hours">
+                            ▲
+                        </button>
+        
+                        <button type="button" id="decreaseHours" class="arrow-button" aria-label="Decrease hours" >
+                            ▼
+                        </button>
+                    </div>
+        
+                    <output id="hoursDisplay" class="time-display">
+                        00
+                    </output>
+        
+                    <span class="time-label">hrs</span>
+                </div>
+
+
+                
+        
+                <div class="time-control">
+                    <div class="arrow-controls">
+
+                        <button type="button" id="increaseMinutes" class="arrow-button" aria-label="Increase minutes">
+                            ▲
+                        </button>
+                        
+                        <button type="button" id="decreaseMinutes" class="arrow-button" aria-label="Decrease minutes" >
+                            ▼
+                        </button>
+                    </div>
+        
+                    <output id="minutesDisplay" class="time-display">
+                        30
+                    </output>
+        
+                    <span class="time-label">mins</span>
+                </div>
+            </div>
+            <button type="button" id="startStudyButton" class="start-study-button">
+                Start Studying!
+            </button>
+        </div>
+        
     </div>
 
-    <script src="{{ url_for('static', filename='js/random.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/study_session.js') }}"></script>
 </body>
 </html>
