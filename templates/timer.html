@@ -94,13 +94,15 @@
                     <span class="time-label">mins</span>
                 </div>
             </div>
-            <button type="button" id="startStudyButton" class="start-study-button">
+
+            <button type="button" id="startStudyButton" class="start-study-button" data-start-url="{{ url_for('start_study_session') }}" data-session-url="{{ url_for('study_session') }}">
                 Start Studying!
             </button>
+
         </div>
         
     </div>
 
-    <script src="{{ url_for('static', filename='js/study_session.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/study_session.js') }}" defer></script>
 </body>
 </html>

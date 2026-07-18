@@ -1,7 +1,9 @@
 import os
-from flask import Flask, render_template, request, redirect, url_for, session
+import time
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
-from database_manager import db, User
+from database_manager import db, User, StudySession, utc_now
+from datetime import datetime, timezone
 
 app = Flask(__name__)
 
@@ -129,6 +131,327 @@ def timer():
     if "user_id" not in session:
         return redirect(url_for("login"))
     return render_template("timer.html")
+
+
+@app.route("/study-session")
+def study_session():
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    tree_urls = [
+        url_for(
+            "static",
+            filename=f"images/tree_{stage}.png"
+        )
+        for stage in range(1, 8)
+    ]
+
+    return render_template(
+        "study_session.html",
+        tree_urls=tree_urls
+    )
+
+@app.route(
+    "/api/study-sessions/start",
+    methods=["POST"]
+)
+def start_study_session():
+    if "user_id" not in session:
+        return jsonify({
+            "error": "You must be logged in."
+        }), 401
+
+    request_data = request.get_json(silent=True) or {}
+
+    try:
+        duration_minutes = int(
+            request_data.get("duration_minutes")
+        )
+    except (TypeError, ValueError):
+        return jsonify({
+            "error": "The study duration is invalid."
+        }), 400
+
+    if duration_minutes < 15:
+        return jsonify({
+            "error": (
+                "A study session must be at least "
+                "15 minutes."
+            )
+        }), 400
+
+    if duration_minutes > 720:
+        return jsonify({
+            "error": (
+                "A study session cannot be longer "
+                "than 12 hours."
+            )
+        }), 400
+
+    if duration_minutes % 15 != 0:
+        return jsonify({
+            "error": (
+                "The study duration must use "
+                "15-minute intervals."
+            )
+        }), 400
+
+    current_time = utc_now()
+
+    old_active_sessions = StudySession.query.filter_by(
+        user_id=session["user_id"],
+        status="active"
+    ).all()
+
+    for old_session in old_active_sessions:
+        elapsed_seconds = int(
+            (
+                current_time -
+                old_session.started_at
+            ).total_seconds()
+        )
+
+        old_session.actual_duration_seconds = max(
+            0,
+            min(
+                elapsed_seconds,
+                old_session.planned_duration_seconds
+            )
+        )
+
+        old_session.ended_at = current_time
+        old_session.status = "replaced"
+
+    planned_duration_seconds = duration_minutes * 60
+
+    new_study_session = StudySession(
+        user_id=session["user_id"],
+        planned_duration_seconds=(
+            planned_duration_seconds
+        ),
+        actual_duration_seconds=0,
+        started_at=current_time,
+        status="active"
+    )
+
+    db.session.add(new_study_session)
+    db.session.commit()
+
+    start_time_milliseconds = int(time.time() * 1000)
+
+    end_time_milliseconds = (
+        start_time_milliseconds +
+        planned_duration_seconds * 1000
+    )
+
+    return jsonify({
+        "study_session_id": (
+            new_study_session.study_session_id
+        ),
+        "planned_duration_seconds": (
+            planned_duration_seconds
+        ),
+        "start_time_ms": start_time_milliseconds,
+        "end_time_ms": end_time_milliseconds
+    }), 201
+
+
+@app.route(
+    "/api/study-sessions/<int:study_session_id>/finish",
+    methods=["POST"]
+)
+def finish_study_session(study_session_id):
+    if "user_id" not in session:
+        return jsonify({
+            "error": "You must be logged in."
+        }), 401
+
+    study_session_record = db.session.get(
+        StudySession,
+        study_session_id
+    )
+
+    if study_session_record is None:
+        return jsonify({
+            "error": "Study session not found."
+        }), 404
+
+    if (
+        study_session_record.user_id
+        != session["user_id"]
+    ):
+        return jsonify({
+            "error": "You cannot modify this session."
+        }), 403
+
+
+    if study_session_record.status != "active":
+        return jsonify({
+            "study_session_id": (
+                study_session_record.study_session_id
+            ),
+            "actual_duration_seconds": (
+                study_session_record
+                .actual_duration_seconds
+            ),
+            "status": study_session_record.status
+        }), 200
+
+    request_data = request.get_json(silent=True) or {}
+
+    requested_status = request_data.get(
+        "status",
+        "ended_early"
+    )
+
+    allowed_statuses = {
+        "completed",
+        "ended_early",
+        "cancelled_navigation"
+    }
+
+    if requested_status not in allowed_statuses:
+        return jsonify({
+            "error": "Invalid study-session status."
+        }), 400
+
+    current_time = utc_now()
+
+    elapsed_seconds = int(
+        (
+            current_time -
+            study_session_record.started_at
+        ).total_seconds()
+    )
+
+    elapsed_seconds = max(0, elapsed_seconds)
+
+    if requested_status == "completed":
+        if (
+            elapsed_seconds + 2
+            < study_session_record
+                .planned_duration_seconds
+        ):
+            return jsonify({
+                "error": (
+                    "The study session has not "
+                    "finished yet."
+                )
+            }), 400
+
+        actual_duration_seconds = (
+            study_session_record
+                .planned_duration_seconds
+        )
+
+    else:
+        actual_duration_seconds = min(
+            elapsed_seconds,
+            study_session_record
+                .planned_duration_seconds
+        )
+
+    study_session_record.actual_duration_seconds = (
+        actual_duration_seconds
+    )
+
+    study_session_record.ended_at = current_time
+    study_session_record.status = requested_status
+
+    db.session.commit()
+
+    return jsonify({
+        "study_session_id": (
+            study_session_record.study_session_id
+        ),
+        "actual_duration_seconds": (
+            actual_duration_seconds
+        ),
+        "status": requested_status
+    }), 200
+
+
+@app.route("/api/study-sessions/daily-total")
+def daily_study_total():
+    if "user_id" not in session:
+        return jsonify({
+            "error": "You must be logged in."
+        }), 401
+
+    try:
+        day_start_ms = int(
+            request.args.get("day_start_ms")
+        )
+
+        day_end_ms = int(
+            request.args.get("day_end_ms")
+        )
+
+    except (TypeError, ValueError):
+        return jsonify({
+            "error": "Invalid date range."
+        }), 400
+
+    if day_end_ms <= day_start_ms:
+        return jsonify({
+            "error": "Invalid date range."
+        }), 400
+
+    # Convert the user's local-day boundaries into UTC.
+    day_start_utc = datetime.fromtimestamp(
+        day_start_ms / 1000,
+        tz=timezone.utc
+    ).replace(tzinfo=None)
+
+    day_end_utc = datetime.fromtimestamp(
+        day_end_ms / 1000,
+        tz=timezone.utc
+    ).replace(tzinfo=None)
+
+    study_session_records = StudySession.query.filter(
+        StudySession.user_id == session["user_id"],
+
+        # Only saved/finished sessions are included here.
+        StudySession.ended_at.isnot(None),
+
+        # Find sessions that overlap the selected day.
+        StudySession.started_at < day_end_utc,
+        StudySession.ended_at > day_start_utc
+    ).all()
+
+    total_seconds = 0
+
+    for study_session_record in study_session_records:
+        overlap_start = max(
+            study_session_record.started_at,
+            day_start_utc
+        )
+
+        overlap_end = min(
+            study_session_record.ended_at,
+            day_end_utc
+        )
+
+        if overlap_end > overlap_start:
+            total_seconds += int(
+                (
+                    overlap_end -
+                    overlap_start
+                ).total_seconds()
+            )
+
+    return jsonify({
+        "total_seconds": total_seconds
+    }), 200
+
+
+
+
+
+
+
+
+
 
 
 

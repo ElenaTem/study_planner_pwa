@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Active Study Session</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/main.css') }}"
+    >
+
+    <script
+        src="{{ url_for('static', filename='js/active_study_session.js') }}"
+        defer
+    ></script>
+</head>
+
+<body>
+    <header>
+        <nav>
+            <div class="logo_button">
+                <a href="{{ url_for('home') }}">
+                    <img src="" alt="Logo">
+                </a>
+            </div>
+
+            <ul>
+                <li><a class="session-navigation-link" href="{{ url_for('home') }}">Home</a></li>
+                <li><a class="session-navigation-link" href="{{ url_for('calendar') }}">Calendar</a></li>
+                <li><a class="session-navigation-link" href="{{ url_for('timer') }}">Study Session</a></li>
+            </ul>
+
+            <a class="acc" href="">
+                Account
+            </a>
+        </nav>
+    </header>
+
+    <main
+        id="activeStudySessionApp"
+        class="main_timer_box active_session_box"
+        data-home-url="{{ url_for('home') }}"
+        data-timer-url="{{ url_for('timer') }}"
+        data-daily-total-url="{{ url_for('daily_study_total') }}"
+    >
+
+        <aside class="daily-study-counter" aria-label="Total study time today">   
+            <span class="daily-study-counter-label">
+                Studied Today
+            </span>
+
+            <strong id="dailyStudyTotal">
+                0 hrs 0 mins
+            </strong>
+        </aside>
+
+        <div class="active_session_content">
+
+            <div
+                class="active_tree_scene"
+                aria-hidden="true"
+            >
+                <img
+                    id="activeStudyTree"
+                    class="active_tree_image"
+                    src="{{ tree_urls[0] }}"
+                    alt=""
+                >
+
+                <img
+                    class="active_grass_image"
+                    src="{{ url_for('static', filename='images/grass.png') }}"
+                    alt=""
+                >
+            </div>
+
+            <p
+                id="nextGrowthMessage"
+                class="next-growth-message"
+            >
+                Time until next growth stage:
+                calculating...
+            </p>
+
+            <section class="countdown-section">
+                <p class="study-timer-label">
+                    Time Remaining
+                </p>
+
+                <output
+                    id="countdownDisplay"
+                    class="countdown-display"
+                    aria-live="polite"
+                >
+                    00:00
+                </output>
+
+                <div
+                    id="progressTrack"
+                    class="study-progress-track"
+                    role="progressbar"
+                    aria-label="Study-session progress"
+                    aria-valuemin="0"
+                    aria-valuemax="100"
+                    aria-valuenow="0"
+                >
+                    <div
+                        id="progressFill"
+                        class="study-progress-fill"
+                    ></div>
+                </div>
+
+                <div class="progress-labels">
+                    <span id="elapsedTimeLabel">
+                        Studied: 00:00
+                    </span>
+                </div>
+            </section>
+
+            <button
+                type="button"
+                id="endSessionButton"
+                class="end-session-button"
+            >
+                End Study Session
+            </button>
+        </div>
+    </main>
+
+
+    <dialog
+        id="endSessionDialog"
+        class="study-session-dialog"
+    >
+        <h2>End your study session?</h2>
+
+        <p>
+            Your completed study time will still be
+            saved.
+        </p>
+
+        <div class="dialog-buttons">
+            <button
+                type="button"
+                id="continueSessionButton"
+            >
+                Continue Studying
+            </button>
+
+            <button
+                type="button"
+                id="confirmEndSessionButton"
+                class="confirm-end-button"
+            >
+                End Session
+            </button>
+        </div>
+    </dialog>
+
+
+    <dialog
+        id="completionDialog"
+        class="study-session-dialog"
+    >
+        <h2>Study session complete!</h2>
+
+        <p>
+            Congratulations! You completed your
+            planned study session.
+        </p>
+
+        <p>
+            Returning home in
+            <strong id="redirectCountdown">30</strong>
+            seconds.
+        </p>
+
+        <button
+            type="button"
+            id="returnHomeButton"
+        >
+            Return Home Now
+        </button>
+    </dialog>
+
+
+    <script
+        id="treeImageUrls"
+        type="application/json"
+    >{{ tree_urls | tojson }}</script>
+</body>
+</html>
