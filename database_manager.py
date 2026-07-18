@@ -115,3 +115,57 @@ class StudySession(db.Model):
             f"<StudySession "
             f"{self.study_session_id}: {self.status}>"
         )
+    
+
+class DailyStudyGoal(db.Model):
+    __tablename__ = "daily_study_goals"
+
+    goal_id = db.Column(
+        db.Integer,
+        primary_key=True
+    )
+
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.user_id"),
+        nullable=False,
+        index=True
+    )
+
+    goal_date = db.Column(
+        db.Date,
+        nullable=False
+    )
+
+    goal_minutes = db.Column(
+        db.Integer,
+        nullable=False
+    )
+
+    __table_args__ = (
+        db.UniqueConstraint(
+            "user_id",
+            "goal_date",
+            name="unique_user_daily_goal"
+        ),
+        db.CheckConstraint(
+            "goal_minutes >= 15",
+            name="minimum_daily_goal"
+        ),
+        db.CheckConstraint(
+            "goal_minutes <= 720",
+            name="maximum_daily_goal"
+        ),
+        db.CheckConstraint(
+            "goal_minutes % 15 = 0",
+            name="daily_goal_interval"
+        ),
+    )
+
+    def __repr__(self):
+        return (
+            f"<DailyStudyGoal "
+            f"user={self.user_id}, "
+            f"date={self.goal_date}, "
+            f"minutes={self.goal_minutes}>"
+        )

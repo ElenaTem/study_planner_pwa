@@ -98,7 +98,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const totalDurationSeconds =
         activeSession.plannedDurationSeconds;
-
+    
+    const totalDurationMilliseconds =
+        totalDurationSeconds * 1000;
     const endTimeMs =
         activeSession.endTimeMs;
 
@@ -155,51 +157,74 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    function updateTree(progress) {
+    function updateTree(currentTimeMs) {
+        const elapsedMilliseconds = Math.min(
+            totalDurationMilliseconds,
+            Math.max(
+                0,
+                currentTimeMs - startTimeMs
+            )
+        );
+    
+        const progress =
+            elapsedMilliseconds /
+            totalDurationMilliseconds;
+    
         /*
-         * progress ranges from 0 to 1.
-         *
-         * Multiplying by 7 divides the session into
-         * seven equal growth stages.
+         * Divides the complete session into
+         * seven equal tree-growth stages.
          */
         const treeStageIndex = Math.min(
             6,
             Math.floor(progress * 7)
         );
-
+    
         activeStudyTree.src =
             treeImageUrls[treeStageIndex];
-
-        if (treeStageIndex >= 6) {
+    
+        /*
+         * Stage 7 is the final tree, so there
+         * is no next growth stage.
+         */
+        if (treeStageIndex === 6) {
             nextGrowthMessage.textContent =
-                "Your tree has reached its final stage.";
-
+                "Your tree has reached its final growth stage.";
+    
             return;
         }
-
+    
+        /*
+         * Calculate the exact timestamp at which
+         * the next tree stage should appear.
+         */
         const nextStageProgress =
             (treeStageIndex + 1) / 7;
-
-        const nextStageAtSeconds =
-            totalDurationSeconds *
-            nextStageProgress;
-
-        const elapsedSeconds =
-            totalDurationSeconds * progress;
-
+    
+        const nextStageTimeMs =
+            startTimeMs +
+            (
+                totalDurationMilliseconds *
+                nextStageProgress
+            );
+    
         const secondsUntilNextStage = Math.max(
             0,
             Math.ceil(
-                nextStageAtSeconds -
-                elapsedSeconds
+                (
+                    nextStageTimeMs -
+                    currentTimeMs
+                ) / 1000
             )
         );
-
+    
+        const stageCountdownUsesHours =
+            secondsUntilNextStage >= 3600;
+    
         nextGrowthMessage.textContent =
             `Time until next growth stage: ${
                 formatTime(
                     secondsUntilNextStage,
-                    false
+                    stageCountdownUsesHours
                 )
             }`;
     }
@@ -362,39 +387,47 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     function updateDisplay() {
+        /*
+         * One clock reading is used for every
+         * timer calculation during this update.
+         */
+        const currentTimeMs = Date.now();
+    
         const remainingMilliseconds = Math.max(
             0,
-            endTimeMs - Date.now()
+            endTimeMs - currentTimeMs
         );
-
+    
+        const elapsedMilliseconds = Math.min(
+            totalDurationMilliseconds,
+            Math.max(
+                0,
+                currentTimeMs - startTimeMs
+            )
+        );
+    
         const remainingSeconds = Math.ceil(
             remainingMilliseconds / 1000
         );
-
-        const elapsedSeconds = Math.min(
-            totalDurationSeconds,
-            Math.max(
-                0,
-                totalDurationSeconds -
-                remainingMilliseconds / 1000
-            )
-        );
-
+    
+        const elapsedSeconds =
+            elapsedMilliseconds / 1000;
+    
         const progress = Math.min(
             1,
-            elapsedSeconds /
-            totalDurationSeconds
+            elapsedMilliseconds /
+            totalDurationMilliseconds
         );
-
+    
         const progressPercentage =
             progress * 100;
-
+    
         countdownDisplay.textContent =
             formatTime(
                 remainingSeconds,
                 useHours
             );
-
+    
         elapsedTimeLabel.textContent =
             `Studied: ${
                 formatTime(
@@ -402,20 +435,25 @@ document.addEventListener("DOMContentLoaded", () => {
                     useHours
                 )
             }`;
-
+    
         progressFill.style.width =
             `${progressPercentage}%`;
-
+    
         progressTrack.setAttribute(
             "aria-valuenow",
             String(
                 Math.round(progressPercentage)
             )
         );
-
-        updateTree(progress);
+    
+        /*
+         * Pass the exact same clock reading used
+         * by the main countdown.
+         */
+        updateTree(currentTimeMs);
+    
         updateDailyStudyCounter();
-
+    
         if (remainingMilliseconds <= 0) {
             completeStudySession();
         }

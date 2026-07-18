@@ -2,8 +2,9 @@ import os
 import time
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
-from database_manager import db, User, StudySession, utc_now
-from datetime import datetime, timezone
+from database_manager import db, User, StudySession, utc_now, DailyStudyGoal
+from datetime import datetime, timezone, timedelta
+
 
 app = Flask(__name__)
 
@@ -446,6 +447,220 @@ def daily_study_total():
 
 
 
+@app.route(
+    "/api/daily-study-goal",
+    methods=["GET", "POST"]
+)
+def daily_study_goal():
+    if "user_id" not in session:
+        return jsonify({
+            "error": "You must be logged in."
+        }), 401
+
+    if request.method == "GET":
+        date_text = request.args.get("date")
+
+        try:
+            goal_date = datetime.strptime(
+                date_text,
+                "%Y-%m-%d"
+            ).date()
+
+        except (TypeError, ValueError):
+            return jsonify({
+                "error": "Invalid goal date."
+            }), 400
+
+        goal_record = DailyStudyGoal.query.filter_by(
+            user_id=session["user_id"],
+            goal_date=goal_date
+        ).first()
+
+        if goal_record is None:
+            return jsonify({
+                "exists": False,
+                "goal_minutes": None
+            }), 200
+
+        return jsonify({
+            "exists": True,
+            "goal_minutes": goal_record.goal_minutes
+        }), 200
+
+    request_data = request.get_json(silent=True) or {}
+
+    date_text = request_data.get("date")
+
+    try:
+        goal_date = datetime.strptime(
+            date_text,
+            "%Y-%m-%d"
+        ).date()
+
+        goal_minutes = int(
+            request_data.get("goal_minutes")
+        )
+
+    except (TypeError, ValueError):
+        return jsonify({
+            "error": "Invalid daily goal."
+        }), 400
+
+    if goal_minutes < 15:
+        return jsonify({
+            "error": (
+                "The daily goal must be at least "
+                "15 minutes."
+            )
+        }), 400
+
+    if goal_minutes > 720:
+        return jsonify({
+            "error": (
+                "The daily goal cannot exceed "
+                "12 hours."
+            )
+        }), 400
+
+    if goal_minutes % 15 != 0:
+        return jsonify({
+            "error": (
+                "The daily goal must use "
+                "15-minute intervals."
+            )
+        }), 400
+
+    goal_record = DailyStudyGoal.query.filter_by(
+        user_id=session["user_id"],
+        goal_date=goal_date
+    ).first()
+
+    if goal_record is None:
+        goal_record = DailyStudyGoal(
+            user_id=session["user_id"],
+            goal_date=goal_date,
+            goal_minutes=goal_minutes
+        )
+
+        db.session.add(goal_record)
+
+    else:
+        goal_record.goal_minutes = goal_minutes
+
+    db.session.commit()
+
+    return jsonify({
+        "exists": True,
+        "goal_minutes": goal_record.goal_minutes
+    }), 200
+
+@app.route("/api/study-analytics/month", methods=["POST"])
+def monthly_study_analytics():
+    if "user_id" not in session:
+        return jsonify({
+            "error": "You must be logged in."
+        }), 401
+
+    request_data = request.get_json(silent=True) or {}
+
+    day_boundaries_ms = request_data.get(
+        "day_boundaries_ms"
+    )
+
+    if not isinstance(day_boundaries_ms, list):
+        return jsonify({
+            "error": "Invalid day boundaries."
+        }), 400
+
+    if not 29 <= len(day_boundaries_ms) <= 32:
+        return jsonify({
+            "error": "Invalid number of days."
+        }), 400
+
+    try:
+        day_boundaries_ms = [
+            int(boundary)
+            for boundary in day_boundaries_ms
+        ]
+
+    except (TypeError, ValueError):
+        return jsonify({
+            "error": "Invalid day boundaries."
+        }), 400
+
+    for index in range(len(day_boundaries_ms) - 1):
+        if (
+            day_boundaries_ms[index]
+            >= day_boundaries_ms[index + 1]
+        ):
+            return jsonify({
+                "error": (
+                    "Day boundaries must be "
+                    "in chronological order."
+                )
+            }), 400
+
+    utc_boundaries = [
+        datetime.fromtimestamp(
+            boundary / 1000,
+            tz=timezone.utc
+        ).replace(tzinfo=None)
+        for boundary in day_boundaries_ms
+    ]
+
+    month_start = utc_boundaries[0]
+    month_end = utc_boundaries[-1]
+
+    study_session_records = StudySession.query.filter(
+        StudySession.user_id == session["user_id"],
+        StudySession.actual_duration_seconds > 0,
+        StudySession.started_at < month_end
+    ).all()
+
+    daily_seconds = [
+        0 for _ in range(len(utc_boundaries) - 1)
+    ]
+
+    for study_record in study_session_records:
+        session_start = study_record.started_at
+
+        session_end = (
+            study_record.started_at
+            + timedelta(
+                seconds=study_record.actual_duration_seconds
+            )
+        )
+
+        if session_end <= month_start:
+            continue
+
+        for day_index in range(
+            len(utc_boundaries) - 1
+        ):
+            day_start = utc_boundaries[day_index]
+            day_end = utc_boundaries[day_index + 1]
+
+            overlap_start = max(
+                session_start,
+                day_start
+            )
+
+            overlap_end = min(
+                session_end,
+                day_end
+            )
+
+            if overlap_end > overlap_start:
+                daily_seconds[day_index] += int(
+                    (
+                        overlap_end
+                        - overlap_start
+                    ).total_seconds()
+                )
+
+    return jsonify({
+        "daily_seconds": daily_seconds
+    }), 200
 
 
 

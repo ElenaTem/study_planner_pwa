@@ -34,6 +34,12 @@
 
 
 
+    <main
+        id="homeDashboard"
+        data-goal-url="{{ url_for('daily_study_goal') }}"
+        data-month-url="{{ url_for('monthly_study_analytics') }}"
+    >
+
     <div class="home_row1">
         <div class="notepad_block">
             <img
@@ -55,12 +61,112 @@
 
         </div>
 
-        <div class="block2">
-            <p>text</p>
-        </div>
+        <section class="study-goal-card" id="studyGoalCard">
+            <h2>Today’s Study Goal</h2>
+
+            <div class="goal-picker">
+                <div class="time-control">
+                    <div class="arrow-controls">
+                        <button type="button" class="arrow-button goal-change-button" data-change="60" aria-label="Increase goal hours">
+                            ▲
+                        </button>
+
+                        <button
+                            type="button"
+                            class="arrow-button goal-change-button"
+                            data-change="-60"
+                            aria-label="Decrease goal hours"
+                        >
+                            ▼
+                        </button>
+                    </div>
+
+                    <output id="goalHoursDisplay" class="time-display">
+                        02
+                    </output>
+
+                    <span class="time-label">hrs</span>
+                </div>
+
+                <div class="time-control">
+                    <div class="arrow-controls">
+                        <button type="button" class="arrow-button goal-change-button" data-change="15" aria-label="Increase goal minutes" >
+                            ▲
+                        </button>
+
+                        <button type="button" class="arrow-button goal-change-button" data-change="-15" aria-label="Decrease goal minutes">
+                            ▼
+                        </button>
+                    </div>
+
+                    <output id="goalMinutesDisplay" class="time-display">
+                        00
+                    </output>
+
+                    <span class="time-label">mins</span>
+                </div>
+            </div>
+
+            
+
+            <p id="goalSaveMessage" class="goal-save-message" aria-live="polite"></p>
+
+            <div class="goal-chart-container">
+                <canvas
+                    id="todayGoalChart"
+                    aria-label="Today's study goal progress"
+                ></canvas>
+
+                <div class="goal-chart-summary">
+                    <strong id="todayStudySummary">
+                        Loading study time...
+                    </strong>
+
+                    <span id="todayGoalPercentage"></span>
+                </div>
+            </div>
+        </section>
 
     </div>
-    <script src="{{ url_for('static', filename='js/random.js') }}"></script>
+
+    <section class="monthly-chart-card">
+        <h2>Study Time This Month</h2>
+    
+        <div class="monthly-chart-container">
+            <canvas
+                id="monthlyStudyChart"
+                aria-label="Study time for each day this month"
+            ></canvas>
+        </div>
+    </section>
+    </main>
+
+    <dialog
+        id="dailyGoalPrompt"
+        class="daily-goal-dialog"
+    >
+        <h2>Set today’s study goal</h2>
+
+        <p>
+            You have not selected a study goal for
+            today yet.
+        </p>
+        
+        <button
+        type="button"
+        id="goToGoalPickerButton"
+        class="save-goal-button"
+    >
+        Set Today’s Goal
+    </button>
+        
+    </dialog>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js" defer ></script>
+
+    <script src="{{ url_for('static', filename='js/random.js') }}" defer ></script>
+
+    <script src="{{ url_for('static', filename='js/home_analytics.js') }}" defer ></script>
 </body>
 
 </html>

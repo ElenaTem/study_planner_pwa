@@ -128,7 +128,7 @@ body {
   color: #888;
 }
 
-button {
+.notepad button {
   border: none;
   background: transparent;
   cursor: pointer;
@@ -290,6 +290,7 @@ button {
   border: 1px solid black;
   border-radius: 20px;
   background-color: #96C3FF;
+  opacity: 0.90;
 
   text-align: center;
 }
@@ -567,12 +568,29 @@ button {
 
 .end-session-button {
   margin-top: clamp(30px, 5vw, 55px);
-  padding: 10px 20px;
-
-  border: none;
+  padding: 11px 20px;
+  color: #222222;
+  background-color: #F7F7FB;
+  border: 1px solid #333333;
   border-radius: 10px;
-
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.12);
   cursor: pointer;
+
+  transition:
+      background-color 0.15s ease,
+      transform 0.15s ease,
+      box-shadow 0.15s ease;
+}
+
+.end-session-button:hover {
+  background-color: #ECECF4;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 7px rgba(0, 0, 0, 0.16);
+}
+
+.end-session-button:focus-visible {
+  outline: 3px solid rgba(44, 91, 145, 0.35);
+  outline-offset: 3px;
 }
 
 .study-session-dialog {
@@ -656,10 +674,12 @@ button {
   align-items: flex-end;
   gap: 4px;
 
-  padding: 10px 14px;
+  padding: 0;
 
-  background-color: rgba(255, 255, 255, 0.72);
-  border-radius: 12px;
+  background: none;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
 
   text-align: right;
 }
@@ -687,5 +707,159 @@ button {
 
   #dailyStudyTotal {
       font-size: 15px;
+  }
+}
+
+
+
+/** HOME ANALYTICS**/
+
+.home_row1 {
+  display: grid;
+  grid-template-columns:
+      minmax(0, 1fr)
+      minmax(320px, 1.2fr);
+
+  margin: clamp(30px, 5vw, 70px);
+  gap: clamp(30px, 6vw, 90px);
+
+  align-items: stretch;
+}
+
+.study-goal-card,
+.monthly-chart-card {
+  box-sizing: border-box;
+
+  border: 2px solid black;
+  border-radius: 20px;
+  background-color: #F7FBFF;
+
+  padding: clamp(20px, 3vw, 32px);
+}
+
+.study-goal-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  text-align: center;
+}
+
+.study-goal-card h2,
+.monthly-chart-card h2 {
+  margin-top: 0;
+}
+
+.goal-picker {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  gap: 18px;
+  margin: 15px 0;
+}
+
+.save-goal-button {
+  padding: 10px 18px;
+
+  border: 1px solid #222222;
+  border-radius: 10px;
+
+  background-color: #FFFFFF;
+
+  font: inherit;
+  cursor: pointer;
+}
+
+.save-goal-button:hover {
+  background-color: #EDF4FC;
+}
+
+.save-goal-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.goal-save-message {
+  min-height: 20px;
+  margin: 10px 0 0;
+
+  font-size: 14px;
+}
+
+.goal-chart-container {
+  position: relative;
+
+  width: min(100%, 430px);
+  height: 250px;
+
+  margin-top: 10px;
+}
+
+.goal-chart-summary {
+  position: absolute;
+
+  left: 50%;
+  bottom: 28px;
+  transform: translateX(-50%);
+
+  width: 90%;
+
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+
+  pointer-events: none;
+}
+
+#todayStudySummary {
+  font-size: 17px;
+}
+
+#todayGoalPercentage {
+  font-size: 14px;
+}
+
+.monthly-chart-card {
+  margin:
+      0
+      clamp(30px, 5vw, 70px)
+      clamp(30px, 5vw, 70px);
+}
+
+.monthly-chart-container {
+  position: relative;
+
+  width: 100%;
+  height: clamp(320px, 42vw, 480px);
+}
+
+.daily-goal-dialog {
+  width: min(90%, 420px);
+
+  padding: 28px;
+
+  border: 1px solid black;
+  border-radius: 18px;
+
+  text-align: center;
+}
+
+.daily-goal-dialog::backdrop {
+  background-color: rgba(0, 0, 0, 0.45);
+}
+
+@media (max-width: 800px) {
+  .home_row1 {
+      grid-template-columns: 1fr;
+      margin: 30px 20px;
+  }
+
+  .monthly-chart-card {
+      margin: 0 20px 30px;
+  }
+
+  .monthly-chart-container {
+      height: 350px;
   }
 }
