@@ -1,50 +1,64 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/main.css') }}"
-    />
-    <link
-      rel="manifest"
-      href="{{ url_for('static', filename='js/manifest.json') }}"
-    />
-    <meta name="theme-color" content="#333333" />
-
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/main.css') }}{% if stylesheet_version %}?v={{ stylesheet_version }}{% endif %}"
+    >
     <title>{% block title %}Study App{% endblock %}</title>
-  </head>
-
-  <body>
+    {% block head_scripts %}{% endblock %}
+</head>
+<body>
     <header>
-      <div class="header-top">
-        <a class="logo_button" href="{{ url_for('index') }}">
-          <img
-            class="logo"
-            src=""
-            alt="Logo"
-          />
-        </a>
+        <nav>
+            <div class="logo_button">
+                <a
+                    {% if logo_links_home | default(true) %}
+                        href="{{ url_for('home') }}"
+                    {% endif %}
+                    {% if navigation_link_class | default('') %}
+                        class="{{ navigation_link_class }}"
+                    {% endif %}
+                >
+                    <img
+                        src="{{ url_for('static', filename='images/logo.png') }}"
+                        alt="StudySprout Logo"
+                    >
+                </a>
+            </div>
 
 
-      </div>
+            {% if show_full_navigation | default(true) %}
+                <ul>
+                    <li>
+                        <a class="{{ navigation_link_class | default('') }}" href="{{ url_for('home') }}">Home</a>
+                    </li>
+                    <li>
+                        <a class="{{ navigation_link_class | default('') }}" href="{{ url_for('timer') }}">Study Session</a>
+                    </li>
+                </ul>
 
-      <nav>
-        <ul>
-          <li><a href="">Home</a></li>
-          <li><a href="">Calendar</a></li>
-          <li><a href="">Study Session</a></li>
 
-        </ul>
-      </nav>
+                {% if use_simple_account_link | default(false) %}
+                    <a class="acc" href="{{ url_for('account') }}">Account</a>
+                {% else %}
+                    {% set account_navigation_class = navigation_link_class | default('') %}
+                    {% include '_account_menu.html' %}
+                {% endif %}
+            {% endif %}
+        </nav>
     </header>
 
-    <main>{% block content %}{% endblock %}</main>
+
+    {% block content %}{% endblock %}
+
+    <footer class="site-footer">
+        <p>&copy; 2026 StudySprout</p>
+    </footer>
 
 
-
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-  </body>
+    {% block body_scripts %}{% endblock %}
+</body>
 </html>

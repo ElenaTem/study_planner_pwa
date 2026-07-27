@@ -1,67 +1,148 @@
 "use strict";
 
+
+
+
 document.addEventListener("DOMContentLoaded", () => {
     const app = document.getElementById(
         "activeStudySessionApp"
     );
 
+
+
+
     const dailyStudyTotal =
-    document.getElementById("dailyStudyTotal");
+        document.getElementById("dailyStudyTotal");
+
+
+
+
+    const sessionSubjectName =
+        document.getElementById("sessionSubjectName");
+
+
+
 
     const countdownDisplay = document.getElementById(
         "countdownDisplay"
     );
 
+
+
+
     const progressTrack = document.getElementById(
         "progressTrack"
     );
 
+
+
+
     const progressFill = document.getElementById(
         "progressFill"
     );
+
+
+
 
     const elapsedTimeLabel = document.getElementById(
         "elapsedTimeLabel"
     );
 
 
+
+
+
+
+
+
     const nextGrowthMessage = document.getElementById(
         "nextGrowthMessage"
     );
+
+
+
 
     const activeStudyTree = document.getElementById(
         "activeStudyTree"
     );
 
+
+
+
     const endSessionButton = document.getElementById(
         "endSessionButton"
     );
 
+
+
+
     const endSessionDialog = document.getElementById(
         "endSessionDialog"
     );
+
+
+
 
     const continueSessionButton =
         document.getElementById(
             "continueSessionButton"
         );
 
+
+
+
     const confirmEndSessionButton =
         document.getElementById(
             "confirmEndSessionButton"
         );
 
+
+
+
+    const leaveSessionDialog =
+        document.getElementById(
+            "leaveSessionDialog"
+        );
+
+
+
+
+    const continueStudyingButton =
+        document.getElementById(
+            "continueStudyingButton"
+        );
+
+
+
+
+    const leaveSessionButton =
+        document.getElementById(
+            "leaveSessionButton"
+        );
+
+
+
+
     const completionDialog = document.getElementById(
         "completionDialog"
     );
+
+
+
 
     const redirectCountdown = document.getElementById(
         "redirectCountdown"
     );
 
+
+
+
     const returnHomeButton = document.getElementById(
         "returnHomeButton"
     );
+
+
+
 
     const treeImageUrls = JSON.parse(
         document.getElementById(
@@ -69,16 +150,28 @@ document.addEventListener("DOMContentLoaded", () => {
         ).textContent
     );
 
+
+
+
     const storedSessionText = sessionStorage.getItem(
         "activeStudySession"
     );
+
+
+
 
     if (!storedSessionText) {
         window.location.replace(app.dataset.timerUrl);
         return;
     }
 
+
+
+
     let activeSession;
+
+
+
 
     try {
         activeSession = JSON.parse(
@@ -98,14 +191,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const totalDurationSeconds =
         activeSession.plannedDurationSeconds;
-    
+   
     const totalDurationMilliseconds =
         totalDurationSeconds * 1000;
+    
+    /*calculates the start and end time and how long left in the session */ 
     const endTimeMs =
         activeSession.endTimeMs;
 
     const startTimeMs =
         activeSession.startTimeMs;
+
+        sessionSubjectName.textContent =
+        activeSession.subjectName || "Focus";
 
     let savedStudySecondsToday = 0;
     let loadedDayStartMs = null;
@@ -117,6 +215,38 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let timerInterval = null;
     let sessionHasEnded = false;
+    let navigationIsBeingProcessed = false;
+    let allowNextHistoryNavigation = false;
+    let pendingNavigationDestination = null;
+    let pendingNavigationCameFromBackButton = false;
+
+    /*
+     * Keep a duplicate history entry for this page. Pressing Back removes
+     * that entry first, which gives the app a chance to ask for confirmation.
+     * Reloading keeps the guard entry and therefore does not end the session.
+     */
+    if (!window.history.state?.studySessionGuard) {
+        window.history.replaceState(
+            { studySessionBase: true },
+            "",
+            window.location.href
+        );
+
+
+
+
+        window.history.pushState(
+            { studySessionGuard: true },
+            "",
+            window.location.href
+        );
+    }
+
+
+
+
+
+
 
 
     function formatTime(seconds, includeHours) {
@@ -125,16 +255,28 @@ document.addEventListener("DOMContentLoaded", () => {
             Math.floor(seconds)
         );
 
+
+
+
         const hours = Math.floor(
             safeSeconds / 3600
         );
+
+
+
 
         const minutes = Math.floor(
             (safeSeconds % 3600) / 60
         );
 
+
+
+
         const remainingSeconds =
             safeSeconds % 60;
+
+
+
 
         if (includeHours) {
             return [
@@ -145,9 +287,15 @@ document.addEventListener("DOMContentLoaded", () => {
             ].join(":");
         }
 
+
+
+
         const totalMinutes = Math.floor(
             safeSeconds / 60
         );
+
+
+
 
         return [
             String(totalMinutes).padStart(2, "0"),
@@ -155,6 +303,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 .padStart(2, "0")
         ].join(":");
     }
+
+
+
+
+
+
 
 
     function updateTree(currentTimeMs) {
@@ -165,11 +319,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 currentTimeMs - startTimeMs
             )
         );
-    
+        
+        /* calculates the progress bar */
         const progress =
             elapsedMilliseconds /
             totalDurationMilliseconds;
-    
+   
         /*
          * Divides the complete session into
          * seven equal tree-growth stages.
@@ -178,10 +333,10 @@ document.addEventListener("DOMContentLoaded", () => {
             6,
             Math.floor(progress * 7)
         );
-    
+   
         activeStudyTree.src =
             treeImageUrls[treeStageIndex];
-    
+   
         /*
          * Stage 7 is the final tree, so there
          * is no next growth stage.
@@ -189,24 +344,24 @@ document.addEventListener("DOMContentLoaded", () => {
         if (treeStageIndex === 6) {
             nextGrowthMessage.textContent =
                 "Your tree has reached its final growth stage.";
-    
+   
             return;
         }
-    
+   
         /*
          * Calculate the exact timestamp at which
          * the next tree stage should appear.
          */
         const nextStageProgress =
             (treeStageIndex + 1) / 7;
-    
+   
         const nextStageTimeMs =
             startTimeMs +
             (
                 totalDurationMilliseconds *
                 nextStageProgress
             );
-    
+   
         const secondsUntilNextStage = Math.max(
             0,
             Math.ceil(
@@ -216,10 +371,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 ) / 1000
             )
         );
-    
+   
         const stageCountdownUsesHours =
             secondsUntilNextStage >= 3600;
-    
+   
         nextGrowthMessage.textContent =
             `Time until next growth stage: ${
                 formatTime(
@@ -229,121 +384,124 @@ document.addEventListener("DOMContentLoaded", () => {
             }`;
     }
 
+
+
+
     function getLocalDayBoundaries() {
         const dayStart = new Date();
-    
+   
         dayStart.setHours(
             0,
             0,
             0,
             0
         );
-    
+   
         const dayEnd = new Date(dayStart);
-    
+   
         dayEnd.setDate(
             dayEnd.getDate() + 1
         );
-    
+   
         return {
             startMs: dayStart.getTime(),
             endMs: dayEnd.getTime()
         };
     }
-    
-    
+   
+   
     function formatDailyStudyTime(totalSeconds) {
         const totalMinutes = Math.floor(
             Math.max(0, totalSeconds) / 60
         );
-    
+   
         const hours = Math.floor(
             totalMinutes / 60
         );
-    
+   
         const minutes =
             totalMinutes % 60;
-    
+   
         const hourText =
             hours === 1 ? "hr" : "hrs";
-    
+   
         const minuteText =
             minutes === 1 ? "min" : "mins";
-    
+   
         return (
             `${hours} ${hourText} ` +
             `${minutes} ${minuteText}`
         );
     }
-    
-    
+   
+   
     async function loadSavedDailyStudyTotal() {
         if (dailyTotalRequestRunning) {
             return;
         }
-    
+   
         dailyTotalRequestRunning = true;
-    
+   
         const dayBoundaries =
             getLocalDayBoundaries();
-    
+   
         const requestUrl = new URL(
             app.dataset.dailyTotalUrl,
             window.location.origin
         );
-    
+   
         requestUrl.searchParams.set(
             "day_start_ms",
             String(dayBoundaries.startMs)
         );
-    
+   
         requestUrl.searchParams.set(
             "day_end_ms",
             String(dayBoundaries.endMs)
         );
-    
+   
         try {
             const response = await fetch(
                 requestUrl
             );
-    
+   
             const responseData =
                 await response.json();
-    
+   
             if (!response.ok) {
                 throw new Error(
                     responseData.error ||
                     "Today's study total could not be loaded."
                 );
             }
-    
+   
             savedStudySecondsToday =
                 responseData.total_seconds;
-    
+   
             loadedDayStartMs =
                 dayBoundaries.startMs;
-    
+   
             loadedDayEndMs =
                 dayBoundaries.endMs;
-    
+   
             updateDailyStudyCounter();
-    
+   
         } catch (error) {
             console.error(error);
-    
+   
             dailyStudyTotal.textContent =
                 "Unavailable";
-    
+   
         } finally {
             dailyTotalRequestRunning = false;
         }
     }
-    
-    
+   
+   
     function updateDailyStudyCounter() {
         const currentDayBoundaries =
             getLocalDayBoundaries();
-    
+   
         /*
          * Reload the saved total if the date changed
          * while a long session was running.
@@ -355,18 +513,18 @@ document.addEventListener("DOMContentLoaded", () => {
             loadSavedDailyStudyTotal();
             return;
         }
-    
+   
         const currentTimeMs = Math.min(
             Date.now(),
             endTimeMs,
             loadedDayEndMs
         );
-    
+   
         const activeStudyStartMs = Math.max(
             startTimeMs,
             loadedDayStartMs
         );
-    
+   
         const activeSecondsToday = Math.max(
             0,
             (
@@ -374,16 +532,22 @@ document.addEventListener("DOMContentLoaded", () => {
                 activeStudyStartMs
             ) / 1000
         );
-    
+   
         const totalSecondsToday =
             savedStudySecondsToday +
             activeSecondsToday;
-    
+   
         dailyStudyTotal.textContent =
             formatDailyStudyTime(
                 totalSecondsToday
             );
     }
+
+
+
+
+
+
 
 
     function updateDisplay() {
@@ -392,12 +556,12 @@ document.addEventListener("DOMContentLoaded", () => {
          * timer calculation during this update.
          */
         const currentTimeMs = Date.now();
-    
+   
         const remainingMilliseconds = Math.max(
             0,
             endTimeMs - currentTimeMs
         );
-    
+   
         const elapsedMilliseconds = Math.min(
             totalDurationMilliseconds,
             Math.max(
@@ -405,29 +569,29 @@ document.addEventListener("DOMContentLoaded", () => {
                 currentTimeMs - startTimeMs
             )
         );
-    
+   
         const remainingSeconds = Math.ceil(
             remainingMilliseconds / 1000
         );
-    
+   
         const elapsedSeconds =
             elapsedMilliseconds / 1000;
-    
+   
         const progress = Math.min(
             1,
             elapsedMilliseconds /
             totalDurationMilliseconds
         );
-    
+   
         const progressPercentage =
             progress * 100;
-    
+   
         countdownDisplay.textContent =
             formatTime(
                 remainingSeconds,
                 useHours
             );
-    
+   
         elapsedTimeLabel.textContent =
             `Studied: ${
                 formatTime(
@@ -435,29 +599,35 @@ document.addEventListener("DOMContentLoaded", () => {
                     useHours
                 )
             }`;
-    
+   
         progressFill.style.width =
             `${progressPercentage}%`;
-    
+   
         progressTrack.setAttribute(
             "aria-valuenow",
             String(
                 Math.round(progressPercentage)
             )
         );
-    
+   
         /*
          * Pass the exact same clock reading used
          * by the main countdown.
          */
         updateTree(currentTimeMs);
-    
+   
         updateDailyStudyCounter();
-    
+   
         if (remainingMilliseconds <= 0) {
             completeStudySession();
         }
     }
+
+
+
+
+
+
 
 
     async function sendFinishRequest(status) {
@@ -476,8 +646,14 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         );
 
+
+
+
         const responseData =
             await response.json();
+
+
+
 
         if (!response.ok) {
             throw new Error(
@@ -486,8 +662,17 @@ document.addEventListener("DOMContentLoaded", () => {
             );
         }
 
+
+
+
         return responseData;
     }
+
+
+
+
+
+
 
 
     async function completeStudySession() {
@@ -495,62 +680,122 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
+
+
+
         sessionHasEnded = true;
 
+
+
+
         window.clearInterval(timerInterval);
+
+
+
 
         countdownDisplay.textContent =
             formatTime(0, useHours);
 
+
+
+
         progressFill.style.width = "100%";
+
+
+
 
         progressTrack.setAttribute(
             "aria-valuenow",
             "100"
         );
 
+
+
+
         activeStudyTree.src =
             treeImageUrls[6];
+
+
+
 
         nextGrowthMessage.textContent =
             "Your tree has fully grown!";
 
+
+
+
         try {
             await sendFinishRequest("completed");
+
+
+
 
             sessionStorage.removeItem(
                 "activeStudySession"
             );
 
+
+
+
             completionDialog.showModal();
+
+
+
 
             beginHomeRedirect();
 
+
+
+
         } catch (error) {
             sessionHasEnded = false;
+
+
+
 
             window.alert(error.message);
         }
     }
 
 
+
+
+
+
+
+
     function beginHomeRedirect() {
         let secondsRemaining = 30;
 
+
+
+
         redirectCountdown.textContent =
             String(secondsRemaining);
+
+
+
 
         const redirectInterval =
             window.setInterval(() => {
                 secondsRemaining -= 1;
 
+
+
+
                 redirectCountdown.textContent =
                     String(secondsRemaining);
+
+
+
 
                 if (secondsRemaining <= 0) {
                     window.clearInterval(
                         redirectInterval
                     );
+
+
+
 
                     window.location.replace(
                         app.dataset.homeUrl
@@ -560,69 +805,166 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
+
+
+
+
+
+
     async function endSessionEarly() {
         confirmEndSessionButton.disabled = true;
         confirmEndSessionButton.textContent =
             "Saving...";
 
+
+
+
         try {
             sessionHasEnded = true;
 
+
+
+
             window.clearInterval(timerInterval);
+
+
+
 
             await sendFinishRequest(
                 "ended_early"
             );
 
+
+
+
             sessionStorage.removeItem(
                 "activeStudySession"
             );
+
+
+
 
             window.location.replace(
                 app.dataset.homeUrl
             );
 
+
+
+
         } catch (error) {
             sessionHasEnded = false;
+
+
+
 
             confirmEndSessionButton.disabled =
                 false;
 
+
+
+
             confirmEndSessionButton.textContent =
                 "End Session";
+
+
+
 
             window.alert(error.message);
         }
     }
 
 
+
+
+
+
+
+
     async function cancelForNavigation(destination) {
+        if (sessionHasEnded || navigationIsBeingProcessed) {
+            if (sessionHasEnded && destination) {
+                window.location.href = destination;
+            }
+
+
+
+
+            return;
+        }
+
+
+
+
+        pendingNavigationDestination = destination;
+        pendingNavigationCameFromBackButton = false;
+        leaveSessionDialog.showModal();
+    }
+
+
+
+
+
+
+
+
+    async function finishSessionForNavigation(destination) {
         if (sessionHasEnded) {
             window.location.href = destination;
             return;
         }
 
+
+
+
         try {
+            navigationIsBeingProcessed = true;
             sessionHasEnded = true;
 
+
+
+
             window.clearInterval(timerInterval);
+
+
+
 
             await sendFinishRequest(
                 "cancelled_navigation"
             );
 
+
+
+
             sessionStorage.removeItem(
                 "activeStudySession"
             );
 
-            window.location.href = destination;
+
+
+
+            if (destination) {
+                window.location.href = destination;
+            } else {
+                allowNextHistoryNavigation = true;
+                window.history.back();
+            }
+
+
+
 
         } catch (error) {
             sessionHasEnded = false;
+            navigationIsBeingProcessed = false;
+
+
+
 
             window.alert(
                 `${error.message} Navigation was cancelled so your study time is not lost.`
             );
+
+
+
 
             timerInterval = window.setInterval(
                 updateDisplay,
@@ -630,6 +972,106 @@ document.addEventListener("DOMContentLoaded", () => {
             );
         }
     }
+
+
+
+
+
+
+
+
+    window.addEventListener(
+        "popstate",
+        () => {
+            if (allowNextHistoryNavigation || sessionHasEnded) {
+                return;
+            }
+
+
+
+
+            pendingNavigationDestination = null;
+            pendingNavigationCameFromBackButton = true;
+            leaveSessionDialog.showModal();
+        }
+    );
+
+
+
+
+    leaveSessionDialog.addEventListener(
+        "cancel",
+        (event) => {
+            event.preventDefault();
+        }
+    );
+
+
+
+
+    continueStudyingButton.addEventListener(
+        "click",
+        () => {
+            leaveSessionDialog.close();
+
+
+
+
+            if (pendingNavigationCameFromBackButton) {
+                window.history.pushState(
+                    { studySessionGuard: true },
+                    "",
+                    window.location.href
+                );
+            }
+
+
+
+
+            pendingNavigationDestination = null;
+            pendingNavigationCameFromBackButton = false;
+        }
+    );
+
+
+
+
+    leaveSessionButton.addEventListener(
+        "click",
+        async () => {
+            const destination =
+                pendingNavigationDestination;
+
+
+
+
+            leaveSessionButton.disabled = true;
+            leaveSessionButton.textContent = "Saving...";
+
+
+
+
+            try {
+                leaveSessionDialog.close();
+                await finishSessionForNavigation(
+                    destination
+                );
+            } finally {
+                leaveSessionButton.disabled = false;
+                leaveSessionButton.textContent =
+                    "Leave Session";
+                pendingNavigationDestination = null;
+                pendingNavigationCameFromBackButton =
+                    false;
+            }
+        }
+    );
+
+
+
+
+
+
 
 
     endSessionButton.addEventListener(
@@ -640,6 +1082,12 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
 
+
+
+
+
+
+
     continueSessionButton.addEventListener(
         "click",
         () => {
@@ -648,10 +1096,22 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
 
+
+
+
+
+
+
     confirmEndSessionButton.addEventListener(
         "click",
         endSessionEarly
     );
+
+
+
+
+
+
 
 
     returnHomeButton.addEventListener(
@@ -664,6 +1124,12 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
 
+
+
+
+
+
+
     document
         .querySelectorAll(
             ".session-navigation-link"
@@ -674,6 +1140,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 (event) => {
                     event.preventDefault();
 
+
+
+
                     cancelForNavigation(
                         navigationLink.href
                     );
@@ -681,15 +1150,18 @@ document.addEventListener("DOMContentLoaded", () => {
             );
         });
 
+
+
+
     loadSavedDailyStudyTotal();
 
+
+
+
     updateDisplay();
-    
-    timerInterval = window.setInterval(
-        updateDisplay,
-        250
-    );
-    updateDisplay();
+
+
+
 
     timerInterval = window.setInterval(
         updateDisplay,

@@ -1,0 +1,184 @@
+<div
+    class="account-menu"
+    id="accountMenu"
+    data-verify-url="{{ url_for('verify_account_password') }}"
+    data-delete-url="{{ url_for('delete_account') }}"
+    data-login-url="{{ url_for('login') }}"
+>
+    <button
+        type="button"
+        class="account-menu-toggle"
+        id="accountMenuToggle"
+        aria-expanded="false"
+        aria-controls="accountDropdown"
+    >
+        <span>Account</span>
+
+        <svg
+            class="account-menu-chevron"
+            viewBox="0 0 20 20"
+            aria-hidden="true"
+        >
+            <path d="M5.5 7.5 10 12l4.5-4.5" />
+        </svg>
+    </button>
+
+
+
+
+    <div
+        class="account-dropdown"
+        id="accountDropdown"
+        role="menu"
+        hidden
+    >
+        <a
+            class="account-dropdown-item {{ account_navigation_class | default('') }}"
+            href="{{ url_for('manage_subjects') }}"
+            role="menuitem"
+        >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 6.5h10M4 12h16M4 17.5h8" />
+                <circle cx="17" cy="6.5" r="2" />
+                <circle cx="15" cy="17.5" r="2" />
+            </svg>
+            <span>Subject Settings</span>
+        </a>
+
+
+
+
+        <a
+            class="account-dropdown-item {{ account_navigation_class | default('') }}"
+            href="{{ url_for('logout') }}"
+            role="menuitem"
+        >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M10 5H5v14h5M14 8l4 4-4 4M18 12H9" />
+            </svg>
+            <span>Log Out</span>
+        </a>
+
+
+
+
+        <div class="account-dropdown-divider" aria-hidden="true"></div>
+
+
+
+
+        <button
+            type="button"
+            class="account-dropdown-item account-delete-trigger"
+            id="openDeleteAccountDialog"
+            role="menuitem"
+        >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5" />
+            </svg>
+            <span>Delete Account</span>
+        </button>
+    </div>
+</div>
+
+
+
+
+<dialog
+    id="deleteAccountDialog"
+    class="account-delete-dialog"
+    aria-labelledby="deleteAccountTitle"
+>
+    <form id="deleteAccountForm" method="dialog">
+        <button
+            type="button"
+            class="dialog-close-button"
+            id="closeDeleteAccountDialog"
+            aria-label="Close delete account dialog"
+        >
+            ×
+        </button>
+
+
+
+
+        <p class="dialog-danger-label">Permanent action</p>
+
+
+
+
+        <h2 id="deleteAccountTitle">Delete your account?</h2>
+
+
+
+
+        <p>
+            This will permanently delete your account and all of your
+            study sessions, subject history, daily goals, analytics,
+            trees and notepad data. This cannot be undone.
+        </p>
+
+
+
+
+        <label for="deleteAccountPassword">
+            Enter your password to continue
+        </label>
+
+
+
+
+        <input
+            type="password"
+            id="deleteAccountPassword"
+            autocomplete="current-password"
+            aria-describedby="deleteAccountMessage"
+        >
+
+
+
+
+        <p
+            id="deleteAccountMessage"
+            class="account-delete-message"
+            aria-live="polite"
+        ></p>
+
+
+
+
+        <div class="account-delete-actions">
+            <button
+                type="button"
+                id="cancelDeleteAccount"
+                class="dialog-secondary-button"
+            >
+                Cancel
+            </button>
+
+
+
+
+            <button
+                type="button"
+                id="verifyDeleteAccountPassword"
+                class="dialog-verify-button"
+                disabled
+            >
+                Confirm Password
+            </button>
+
+
+
+
+            <button
+                type="button"
+                id="confirmDeleteAccount"
+                class="dialog-danger-button"
+                disabled
+            >
+                Delete Account
+            </button>
+        </div>
+    </form>
+</dialog>

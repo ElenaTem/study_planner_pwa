@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% set stylesheet_version = 6 %}
+{% set use_simple_account_link = true %}
+
+
+{% block title %}Account{% endblock %}
+
+
+{% block content %}
+
+
+    <main class="account-page">
+        <section class="account-card">
+            <p class="dashboard-label">Account Settings</p>
+            <h1>{{ user.username }}</h1>
+            <p class="account-email">{{ user.user_email }}</p>
+
+
+
+
+            <div class="account-action-list">
+                <a
+                    class="account-action-card"
+                    href="{{ url_for('manage_subjects') }}"
+                >
+                    <strong>Change Subjects</strong>
+                    <span>
+                        Add, rename, remove, reactivate or permanently
+                        delete your study subjects.
+                    </span>
+                </a>
+            </div>
+        </section>
+    </main>
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+

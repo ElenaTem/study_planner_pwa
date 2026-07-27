@@ -1,35 +1,68 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link
-        rel="stylesheet"
-        href="{{ url_for('static', filename='css/main.css') }}"
-    >
-    <title>Document</title>
-</head>
-<body>
-    <header>
-        <nav>
-            <div class = "logo_button">
-                <a>
-                    <img src = "" alt = "Logo"/>
-                </a>
+{% extends "base.html" %}
+{% set stylesheet_version = 7 %}
 
-            </div>
 
-        
-            <ul>
-                <li><a href="{{ url_for('home') }}">Home</a></li>
-                <li><a href="{{ url_for('calendar') }}">Calendar</a></li>
-                <li><a href="{{ url_for('timer') }}">Study Session</a></li>
-            </ul>
+{% block title %}Dashboard{% endblock %}
 
-            <li class="acc"><a href="">Account</a></li>
-            
-        </nav>
-    </header>
+
+{% block head_scripts %}
+    <script
+        src="{{ url_for('static', filename='js/account_menu.js') }}"
+        defer
+    ></script>
+{% endblock %}
+
+
+{% block content %}
+
+
+    <section class="dashboard-heading">
+
+
+
+
+        <div class="welcome-message">
+            <p class="dashboard-label">
+                Study Dashboard
+            </p>
+   
+            <h1>
+                Welcome, {{ username }}
+            </h1>
+   
+            <p>
+                Keep building consistent study habits today.
+            </p>
+        </div>
+   
+   
+        <aside class="tree-counter-card" aria-label="Total number of trees grown">
+            <p class="tree-counter-title">
+                Total Number of Trees Grown
+            </p>
+
+
+
+
+            <strong class="tree-counter-number">
+                {{ completed_tree_count }}
+            </strong>
+
+
+
+
+            <img
+                class="tree-counter-image"
+                src="{{ url_for('static', filename='images/tree_7.png') }}"
+                alt="Fully grown study tree"
+            >
+        </aside>
+   
+    </section>
+
+
+
+
 
 
 
@@ -39,30 +72,42 @@
         data-goal-url="{{ url_for('daily_study_goal') }}"
         data-month-url="{{ url_for('monthly_study_analytics') }}"
     >
-
+   
     <div class="home_row1">
         <div class="notepad_block">
-            <img
-                class="notepad_img"
-                src="{{ url_for('static', filename='images/notepad.png') }}"
-                alt="notepad"
-            >
+           
             <h2 class="to_do_list">To-Do List</h2>
-            <div class="notepad">
-                
-                <ul id="myList"></ul>
+
+
+
+
+            <div class="notepad" id="notepad" data-api-url="{{ url_for('notepad_items_api') }}">  
+                <ul id="myList" aria-label="Your to-do list" aria-live="polite" ></ul>
+
+
+
 
                 <div class="input-row">
-                    <span class="bullet">•</span>
-                    <input type="text" id="itemInput" placeholder="Add new item" />
+                    <span class="bullet" aria-hidden="true" >•</span>
+                    <textarea id="itemInput" rows="1" maxlength="1000" placeholder="Add new item" aria-label="Add a new to-do list item"></textarea>
+                    <button type="button" id="addTaskButton" class="add-task-button" disabled>Add Task</button>
                 </div>
-                
+               
             </div>
+
+
+
 
         </div>
 
+
+
+
         <section class="study-goal-card" id="studyGoalCard">
             <h2>Today’s Study Goal</h2>
+
+
+
 
             <div class="goal-picker">
                 <div class="time-control">
@@ -70,6 +115,9 @@
                         <button type="button" class="arrow-button goal-change-button" data-change="60" aria-label="Increase goal hours">
                             ▲
                         </button>
+
+
+
 
                         <button
                             type="button"
@@ -81,12 +129,21 @@
                         </button>
                     </div>
 
+
+
+
                     <output id="goalHoursDisplay" class="time-display">
                         02
                     </output>
 
+
+
+
                     <span class="time-label">hrs</span>
                 </div>
+
+
+
 
                 <div class="time-control">
                     <div class="arrow-controls">
@@ -94,22 +151,40 @@
                             ▲
                         </button>
 
+
+
+
                         <button type="button" class="arrow-button goal-change-button" data-change="-15" aria-label="Decrease goal minutes">
                             ▼
                         </button>
                     </div>
 
+
+
+
                     <output id="goalMinutesDisplay" class="time-display">
                         00
                     </output>
+
+
+
 
                     <span class="time-label">mins</span>
                 </div>
             </div>
 
-            
+
+
+
+           
+
+
+
 
             <p id="goalSaveMessage" class="goal-save-message" aria-live="polite"></p>
+
+
+
 
             <div class="goal-chart-container">
                 <canvas
@@ -117,29 +192,76 @@
                     aria-label="Today's study goal progress"
                 ></canvas>
 
+
+
+
                 <div class="goal-chart-summary">
                     <strong id="todayStudySummary">
                         Loading study time...
                     </strong>
+
+
+
 
                     <span id="todayGoalPercentage"></span>
                 </div>
             </div>
         </section>
 
+
+
+
     </div>
 
-    <section class="monthly-chart-card">
-        <h2>Study Time This Month</h2>
-    
-        <div class="monthly-chart-container">
-            <canvas
-                id="monthlyStudyChart"
-                aria-label="Study time for each day this month"
-            ></canvas>
-        </div>
+
+
+
+    <section class="monthly-analytics-grid">
+        <section class="monthly-chart-card">
+            <h2>Study Time This Month</h2>
+       
+            <div class="monthly-chart-container">
+                <canvas
+                    id="monthlyStudyChart"
+                    aria-label="Study time for each day this month"
+                ></canvas>
+            </div>
+        </section>
+
+
+
+
+        <section class="subject-chart-card">
+            <h2>Study Time by Subject</h2>
+
+
+
+
+            <div class="subject-chart-container">
+                <canvas
+                    id="subjectStudyChart"
+                    aria-label="Study duration by subject this month"
+                ></canvas>
+
+
+
+
+                <div class="subject-chart-centre" aria-hidden="true">
+                    <strong>Subject Duration</strong>
+                    <span id="subjectDurationTotal">0 hrs 0 mins</span>
+                </div>
+            </div>
+
+
+
+
+            <p id="subjectChartMessage" class="subject-chart-message"></p>
+        </section>
     </section>
     </main>
+
+
+
 
     <dialog
         id="dailyGoalPrompt"
@@ -147,11 +269,13 @@
     >
         <h2>Set today’s study goal</h2>
 
+
+
+
         <p>
             You have not selected a study goal for
             today yet.
         </p>
-        
         <button
         type="button"
         id="goToGoalPickerButton"
@@ -159,14 +283,22 @@
     >
         Set Today’s Goal
     </button>
-        
     </dialog>
 
+
+
+
+{% endblock %}
+
+
+{% block body_scripts %}
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js" defer ></script>
+
 
     <script src="{{ url_for('static', filename='js/random.js') }}" defer ></script>
 
-    <script src="{{ url_for('static', filename='js/home_analytics.js') }}" defer ></script>
-</body>
 
-</html>
+
+
+    <script src="{{ url_for('static', filename='js/home_analytics.js') }}" defer ></script>
+{% endblock %}

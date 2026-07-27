@@ -1,36 +1,18 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <link
-        rel="stylesheet"
-        href="{{ url_for('static', filename='css/main.css') }}"
-    >
-</head>
-<body>
-    <header>
-        <nav>
-            <div class = "logo_button">
-                <a>
-                    <img src = "" alt = "Logo"/>
-                </a>
+{% extends "base.html" %}
 
-            </div>
 
-        
-            <ul>
-                <li><a href="{{ url_for('home') }}">Home</a></li>
-                <li><a href="{{ url_for('calendar') }}">Calendar</a></li>
-                <li><a href="{{ url_for('timer') }}">Study Session</a></li>
-            </ul>
+{% block title %}Document{% endblock %}
 
-            <li class="acc"><a href="">Account</a></li>
-            
-        </nav>
-    </header>
 
+{% block head_scripts %}
+    <script
+        src="{{ url_for('static', filename='js/account_menu.js') }}"
+        defer
+    ></script>
+{% endblock %}
+
+
+{% block content %}
     <div class="main_timer_box">
         <div class="tree_scene" aria-hidden="true">
             <img
@@ -39,70 +21,107 @@
                 src="{{ url_for('static', filename='images/tree_7.png') }}"
                 alt=""
             >
-    
+   
             <img
                 class="grass_image"
                 src="{{ url_for('static', filename='images/grass.png') }}"
                 alt=""
             >
         </div>
-        
+       
         <div class="time_picker_box">
             <h2>Customise Your Study Session</h2>
 
 
+
+
             <div class="duration-row">
                 <p>Length Of Study Session:</p>
-        
+       
                 <div class="time-control">
                     <div class="arrow-controls">
                         <button type="button" id="increaseHours" class="arrow-button" aria-label="Increase hours">
                             ▲
                         </button>
-        
+       
                         <button type="button" id="decreaseHours" class="arrow-button" aria-label="Decrease hours" >
                             ▼
                         </button>
                     </div>
-        
+       
                     <output id="hoursDisplay" class="time-display">
                         00
                     </output>
-        
+       
                     <span class="time-label">hrs</span>
                 </div>
 
 
-                
-        
+
+
+               
+       
                 <div class="time-control">
                     <div class="arrow-controls">
+
 
                         <button type="button" id="increaseMinutes" class="arrow-button" aria-label="Increase minutes">
                             ▲
                         </button>
-                        
+                       
                         <button type="button" id="decreaseMinutes" class="arrow-button" aria-label="Decrease minutes" >
                             ▼
                         </button>
                     </div>
-        
+       
                     <output id="minutesDisplay" class="time-display">
                         30
                     </output>
-        
+       
                     <span class="time-label">mins</span>
                 </div>
             </div>
+
+
+            <div class="subject-picker-row">
+                <label for="studySubject">Subject:</label>
+
+
+
+
+                <select id="studySubject" class="study-subject-select">
+                    <option value="">Focus</option>
+
+
+
+
+                    {% for subject in subjects %}
+                        <option value="{{ subject.subject_id }}">
+                            {{ subject.subject_name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
 
             <button type="button" id="startStudyButton" class="start-study-button" data-start-url="{{ url_for('start_study_session') }}" data-session-url="{{ url_for('study_session') }}">
                 Start Studying!
             </button>
 
+
         </div>
-        
+       
     </div>
 
+
+{% endblock %}
+
+
+{% block body_scripts %}
     <script src="{{ url_for('static', filename='js/study_session.js') }}" defer></script>
-</body>
-</html>
+{% endblock %}
+
+
+
+
+

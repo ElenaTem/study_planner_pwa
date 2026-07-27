@@ -1,14 +1,17 @@
 "use strict";
 
+
 document.addEventListener("DOMContentLoaded", () => {
     const MINIMUM_DURATION_MINUTES = 15;
     const MAXIMUM_DURATION_MINUTES = 12 * 60;
+
 
     /*
      * The duration currently displayed to the user.
      * It starts at 30 minutes.
      */
     let currentDurationMinutes = 30;
+
 
     /*
      * The final duration is saved here when the user
@@ -37,19 +40,28 @@ document.addEventListener("DOMContentLoaded", () => {
     const startStudyButton =
         document.getElementById("startStudyButton");
 
+    const studySubject =
+        document.getElementById("studySubject");
+
+
+
 
     function updateDisplayedTime() {
         const hours =
             Math.floor(currentDurationMinutes / 60);
 
+
         const minutes =
             currentDurationMinutes % 60;
+
 
         hoursDisplay.textContent =
             String(hours).padStart(2, "0");
 
+
         minutesDisplay.textContent =
             String(minutes).padStart(2, "0");
+
 
         /*
          * Prevent the user going below 15 minutes
@@ -59,17 +71,23 @@ document.addEventListener("DOMContentLoaded", () => {
             currentDurationMinutes <=
             MINIMUM_DURATION_MINUTES;
 
+
         const maximumReached =
             currentDurationMinutes >=
             MAXIMUM_DURATION_MINUTES;
 
+
         decreaseHoursButton.disabled = minimumReached;
         decreaseMinutesButton.disabled = minimumReached;
+
 
         increaseHoursButton.disabled = maximumReached;
         increaseMinutesButton.disabled = maximumReached;
     }
 
+
+
+    /*chanes the timer to the valitated time the user wants */
 
     function changeDuration(amountInMinutes) {
         let newDuration =
@@ -95,37 +113,34 @@ document.addEventListener("DOMContentLoaded", () => {
         updateDisplayedTime();
     }
 
-
     increaseHoursButton.addEventListener("click", () => {
         changeDuration(60);
     });
-
 
     decreaseHoursButton.addEventListener("click", () => {
         changeDuration(-60);
     });
 
-
     increaseMinutesButton.addEventListener("click", () => {
         changeDuration(15);
     });
 
-
     decreaseMinutesButton.addEventListener("click", () => {
         changeDuration(-15);
     });
-
 
     startStudyButton.addEventListener(
         "click",
         async () => {
             selectedStudyDurationMinutes =
                 currentDurationMinutes;
-    
+   
             startStudyButton.disabled = true;
             startStudyButton.textContent =
                 "Starting Session...";
-    
+   
+
+            /* SENDS THE USERS VALITATED TIME TO FLASK */
             try {
                 const response = await fetch(
                     startStudyButton.dataset.startUrl,
@@ -137,54 +152,60 @@ document.addEventListener("DOMContentLoaded", () => {
                         },
                         body: JSON.stringify({
                             duration_minutes:
-                                selectedStudyDurationMinutes
+                                selectedStudyDurationMinutes,
+                                
+                            subject_id:
+                                studySubject.value || null
                         })
                     }
                 );
-    
+   
                 const responseData =
                     await response.json();
-    
+   
                 if (!response.ok) {
                     throw new Error(
                         responseData.error ||
                         "The session could not be started."
                     );
                 }
-    
+   
                 const activeSessionData = {
                     studySessionId:
                         responseData.study_session_id,
-    
+   
                     plannedDurationSeconds:
                         responseData
                             .planned_duration_seconds,
-    
+   
                     startTimeMs:
                         responseData.start_time_ms,
-    
+   
                     endTimeMs:
-                        responseData.end_time_ms
+                        responseData.end_time_ms,
+
+
+                    subjectName:
+                        responseData.subject_name
                 };
-    
+   
                 sessionStorage.setItem(
                     "activeStudySession",
                     JSON.stringify(activeSessionData)
                 );
-    
+   
                 window.location.href =
                     startStudyButton.dataset.sessionUrl;
-    
+   
             } catch (error) {
                 window.alert(error.message);
-    
+   
                 startStudyButton.disabled = false;
                 startStudyButton.textContent =
                     "Start Studying!";
             }
         }
     );
-
 
     /*
      * Show the starting time when the page loads.

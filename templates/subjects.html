@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+{% set stylesheet_version = 6 %}
+{% set show_full_navigation = not onboarding %}
+
+
+{% block title %}{% if onboarding %}Choose Subjects{% else %}Subject Settings{% endif %}{% endblock %}
+
+
+{% block head_scripts %}
+    <script
+        src="{{ url_for('static', filename='js/subjects.js') }}"
+        defer
+    ></script>
+    {% if not onboarding %}
+        <script
+            src="{{ url_for('static', filename='js/account_menu.js') }}"
+            defer
+        ></script>
+    {% endif %}
+{% endblock %}
+
+
+{% block content %}
+
+
+    <main
+        id="subjectManager"
+        class="subject-manager-page"
+        data-api-url="{{ url_for('subjects_api') }}"
+        data-complete-url="{{ url_for('complete_subject_setup') }}"
+        data-home-url="{{ url_for('home') }}"
+        data-onboarding="{{ 'true' if onboarding else 'false' }}"
+    >
+        <section class="subject-manager-card">
+            <header class="subject-manager-heading">
+                <p class="dashboard-label">
+                    {% if onboarding %}Account Setup{% else %}Account{% endif %}
+                </p>
+
+
+
+
+                <h1>
+                    {% if onboarding %}
+                        Choose your subjects
+                    {% else %}
+                        Subject Settings
+                    {% endif %}
+                </h1>
+
+
+
+
+                <p class="subject-manager-intro">
+                    {% if onboarding %}
+                        Add at least one subject to finish setting up your
+                        account. Focus will always remain available.
+                    {% else %}
+                        Choose which subjects appear when you start a study
+                        session. You can use Focus without any active subjects.
+                    {% endif %}
+                </p>
+            </header>
+
+
+
+
+            <form id="addSubjectForm" class="add-subject-form">
+                <label for="newSubjectName" class="visually-hidden">
+                    Add a subject
+                </label>
+
+
+
+
+                <div class="add-subject-row">
+                    <input
+                        type="text"
+                        id="newSubjectName"
+                        maxlength="100"
+                        autocomplete="off"
+                        placeholder="Enter a subject name"
+                    >
+
+
+
+
+                    <button type="submit" id="addSubjectButton">
+                        Add Subject
+                    </button>
+                </div>
+            </form>
+
+
+
+
+            <p
+                id="subjectMessage"
+                class="subject-message"
+                aria-live="polite"
+            ></p>
+
+
+
+
+            <div class="subject-columns">
+                <section class="subject-panel">
+                    <header class="subject-panel-heading">
+                        <h2>Active Subjects</h2>
+                        <p>Track what subjects you study.</p>
+                    </header>
+
+
+
+
+                    <div
+                        id="activeSubjectsList"
+                        class="subject-list"
+                        aria-live="polite"
+                    ></div>
+                </section>
+
+
+
+
+                <section class="subject-panel previous-subjects-panel">
+                    <header class="subject-panel-heading">
+                        <h2>Previous Subjects</h2>
+                        <p>Restore a subject or remove it permanently.</p>
+                    </header>
+
+
+
+
+                    <div
+                        id="inactiveSubjectsList"
+                        class="subject-list"
+                        aria-live="polite"
+                    ></div>
+                </section>
+            </div>
+
+
+
+
+            <div class="subject-page-actions">
+                <button
+                    type="button"
+                    id="continueButton"
+                    class="primary-subject-action"
+                    {% if onboarding %}disabled{% endif %}
+                >
+                    {% if onboarding %}
+                        Continue to Dashboard
+                    {% else %}
+                        Done
+                    {% endif %}
+                </button>
+            </div>
+        </section>
+    </main>
+
+
+
+
+    <dialog
+        id="deleteSubjectDialog"
+        class="subject-delete-dialog"
+        aria-labelledby="deleteSubjectTitle"
+    >
+        <h2 id="deleteSubjectTitle">Delete this subject?</h2>
+
+
+
+
+        <p id="deleteSubjectDescription">
+            This subject will be permanently removed and its previous study
+            sessions will be changed to Focus.
+        </p>
+
+
+
+
+        <div class="dialog-buttons">
+            <button
+                type="button"
+                id="cancelDeleteSubject"
+                class="dialog-secondary-button"
+            >
+                Cancel
+            </button>
+
+
+
+
+            <button
+                type="button"
+                id="confirmDeleteSubject"
+                class="dialog-danger-button"
+            >
+                Delete Subject
+            </button>
+        </div>
+    </dialog>
+{% endblock %}
