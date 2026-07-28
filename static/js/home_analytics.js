@@ -891,4 +891,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
     loadDailyGoal();
     loadMonthlyAnalytics();
+
+
+    // If the dashboard remains open across midnight, reload it so all values
+    // labelled "today" use the new local calendar date and month boundaries.
+    const loadedLocalDateText = getLocalDateText();
+
+
+    window.setInterval(() => {
+        if (getLocalDateText() !== loadedLocalDateText) {
+            window.location.reload();
+        }
+    }, 60 * 1000);
 });

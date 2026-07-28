@@ -780,22 +780,13 @@ document.addEventListener("DOMContentLoaded", () => {
             window.setInterval(() => {
                 secondsRemaining -= 1;
 
-
-
-
                 redirectCountdown.textContent =
                     String(secondsRemaining);
-
-
-
 
                 if (secondsRemaining <= 0) {
                     window.clearInterval(
                         redirectInterval
                     );
-
-
-
 
                     window.location.replace(
                         app.dataset.homeUrl
@@ -817,65 +808,34 @@ document.addEventListener("DOMContentLoaded", () => {
             "Saving...";
 
 
-
-
         try {
             sessionHasEnded = true;
 
-
-
-
             window.clearInterval(timerInterval);
-
-
-
-
             await sendFinishRequest(
                 "ended_early"
             );
-
-
-
-
+        
             sessionStorage.removeItem(
                 "activeStudySession"
             );
-
-
-
 
             window.location.replace(
                 app.dataset.homeUrl
             );
 
-
-
-
         } catch (error) {
             sessionHasEnded = false;
-
-
-
 
             confirmEndSessionButton.disabled =
                 false;
 
-
-
-
             confirmEndSessionButton.textContent =
                 "End Session";
-
-
-
 
             window.alert(error.message);
         }
     }
-
-
-
-
 
 
 
@@ -887,24 +847,13 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
 
-
-
             return;
         }
-
-
-
 
         pendingNavigationDestination = destination;
         pendingNavigationCameFromBackButton = false;
         leaveSessionDialog.showModal();
     }
-
-
-
-
-
-
 
 
     async function finishSessionForNavigation(destination) {
@@ -914,18 +863,12 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
 
-
-
         try {
             navigationIsBeingProcessed = true;
             sessionHasEnded = true;
 
 
-
-
             window.clearInterval(timerInterval);
-
-
 
 
             await sendFinishRequest(
@@ -933,13 +876,9 @@ document.addEventListener("DOMContentLoaded", () => {
             );
 
 
-
-
             sessionStorage.removeItem(
                 "activeStudySession"
             );
-
-
 
 
             if (destination) {
@@ -950,20 +889,14 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
 
-
-
         } catch (error) {
             sessionHasEnded = false;
             navigationIsBeingProcessed = false;
 
 
-
-
             window.alert(
                 `${error.message} Navigation was cancelled so your study time is not lost.`
             );
-
-
 
 
             timerInterval = window.setInterval(
@@ -974,12 +907,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-
-
-
-
-
-
     window.addEventListener(
         "popstate",
         () => {
@@ -988,15 +915,11 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
 
-
-
             pendingNavigationDestination = null;
             pendingNavigationCameFromBackButton = true;
             leaveSessionDialog.showModal();
         }
     );
-
-
 
 
     leaveSessionDialog.addEventListener(
@@ -1007,14 +930,10 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
 
-
-
     continueStudyingButton.addEventListener(
         "click",
         () => {
             leaveSessionDialog.close();
-
-
 
 
             if (pendingNavigationCameFromBackButton) {
@@ -1024,8 +943,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     window.location.href
                 );
             }
-
-
 
 
             pendingNavigationDestination = null;
@@ -1049,8 +966,6 @@ document.addEventListener("DOMContentLoaded", () => {
             leaveSessionButton.textContent = "Saving...";
 
 
-
-
             try {
                 leaveSessionDialog.close();
                 await finishSessionForNavigation(
@@ -1069,24 +984,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 
-
-
-
-
-
     endSessionButton.addEventListener(
         "click",
         () => {
             endSessionDialog.showModal();
         }
     );
-
-
-
-
-
-
-
 
     continueSessionButton.addEventListener(
         "click",
@@ -1096,22 +999,10 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
 
-
-
-
-
-
-
     confirmEndSessionButton.addEventListener(
         "click",
         endSessionEarly
     );
-
-
-
-
-
-
 
 
     returnHomeButton.addEventListener(
@@ -1124,12 +1015,6 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
 
-
-
-
-
-
-
     document
         .querySelectorAll(
             ".session-navigation-link"
@@ -1139,10 +1024,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 "click",
                 (event) => {
                     event.preventDefault();
-
-
-
-
                     cancelForNavigation(
                         navigationLink.href
                     );
@@ -1150,18 +1031,9 @@ document.addEventListener("DOMContentLoaded", () => {
             );
         });
 
-
-
-
     loadSavedDailyStudyTotal();
 
-
-
-
     updateDisplay();
-
-
-
 
     timerInterval = window.setInterval(
         updateDisplay,

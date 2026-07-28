@@ -209,8 +209,8 @@ body {
   border: 2px solid black;
   text-align: left;
   background-color: #efeffb;
-
-  /*
+  border-radius: 20px;
+  /*  
   * Prevent notepad content from appearing outside
   * the notepad image.
   */
@@ -2348,8 +2348,8 @@ nav {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 25px;
-  height: 25px;
+  width: 20px;
+  height: 20px;
   padding: 0;
   border: 0;
   border-radius: 25px;

@@ -1,6 +1,14 @@
 import os
 import time
-from flask import Flask, render_template, request, redirect, url_for, session, jsonify
+from flask import (
+    Flask,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    session,
+    jsonify
+)
 from werkzeug.security import generate_password_hash, check_password_hash
 from database_manager import (
     db,
@@ -13,6 +21,7 @@ from database_manager import (
 )
 from datetime import datetime, timezone, timedelta
 from sqlalchemy import inspect, text
+from dotenv import load_dotenv
 
 
 # main.py creates and configures the Flask application; 
@@ -32,12 +41,28 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 DB_FOLDER = os.path.join(BASE_DIR, ".database")
 DATABASE_PATH = os.path.join(DB_FOLDER, "study_planner.db")
 
+# Load private configuration before configuring Flask. Prefer the standard
+# .env filename, but also support the existing "env" file in this project.
+env_path = os.path.join(BASE_DIR, ".env")
+if not os.path.exists(env_path):
+    env_path = os.path.join(BASE_DIR, "env")
+load_dotenv(env_path)
+
 # Create the database folder on the application's first run.
 os.makedirs(DB_FOLDER, exist_ok=True)
 
 app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{DATABASE_PATH}"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-app.config["SECRET_KEY"] = "your-secret-key"
+
+secret_key = os.environ.get("SECRET_KEY")
+
+if not secret_key:
+    raise RuntimeError(
+        "SECRET_KEY is missing. Copy env.example to .env and replace "
+        "the placeholder with a long random value."
+    )
+
+app.config["SECRET_KEY"] = secret_key
 
 db.init_app(app)
 
@@ -1053,45 +1078,69 @@ def daily_study_total():
             "error": "Invalid date range."
         }), 400
 
-    if day_end_ms <= day_start_ms:
+    day_length_ms = day_end_ms - day_start_ms
+
+    # A local calendar day is normally 24 hours and can be 23 or 25 hours
+    # during daylight-saving changes. Reject unrelated or excessively large
+    # ranges so this endpoint remains a true daily-total calculation.
+    if not 22 * 60 * 60 * 1000 <= day_length_ms <= 26 * 60 * 60 * 1000:
         return jsonify({
             "error": "Invalid date range."
         }), 400
 
-    # Convert the user's local-day boundaries into UTC.
-    day_start_utc = datetime.fromtimestamp(
-        day_start_ms / 1000,
-        tz=timezone.utc
-    ).replace(tzinfo=None)
+    try:
+        # Convert the user's local-day boundaries into UTC.
+        day_start_utc = datetime.fromtimestamp(
+            day_start_ms / 1000,
+            tz=timezone.utc
+        ).replace(tzinfo=None)
 
-    day_end_utc = datetime.fromtimestamp(
-        day_end_ms / 1000,
-        tz=timezone.utc
-    ).replace(tzinfo=None)
+        day_end_utc = datetime.fromtimestamp(
+            day_end_ms / 1000,
+            tz=timezone.utc
+        ).replace(tzinfo=None)
+
+    except (OverflowError, OSError, ValueError):
+        return jsonify({
+            "error": "Invalid date range."
+        }), 400
 
     study_session_records = StudySession.query.filter(
         StudySession.user_id == session["user_id"],
 
-        # Only saved/finished sessions are included here.
-        StudySession.ended_at.isnot(None),
+        # Only sessions with saved study time can contribute to the total.
+        StudySession.actual_duration_seconds > 0,
 
-        # Find sessions that overlap the selected day.
-        StudySession.started_at < day_end_utc,
-        StudySession.ended_at > day_start_utc
+        # A session beginning after the requested day cannot overlap it.
+        StudySession.started_at < day_end_utc
     ).all()
 
     total_seconds = 0
 
     for study_session_record in study_session_records:
-        # Clipping each session to the requested boundaries ensures a session
-        # crossing midnight contributes only the part studied on this day.
+        # The saved actual duration is the authoritative amount of study time.
+        # ended_at can be later than the credited duration when a stale session
+        # is replaced or a finish request is delayed, so using ended_at directly
+        # could incorrectly overcount the user's total.
+        effective_session_end = (
+            study_session_record.started_at
+            + timedelta(
+                seconds=(
+                    study_session_record
+                    .actual_duration_seconds
+                )
+            )
+        )
+
+        # Clipping each saved session to the requested local-day boundaries
+        # ensures a session crossing midnight contributes only today's portion.
         overlap_start = max(
             study_session_record.started_at,
             day_start_utc
         )
 
         overlap_end = min(
-            study_session_record.ended_at,
+            effective_session_end,
             day_end_utc
         )
 
@@ -1257,28 +1306,34 @@ def monthly_study_analytics():
             "error": "Invalid day boundaries."
         }), 400
 
-    # Strictly increasing boundaries prevent negative or overlapping day spans.
+    # Strictly increasing, day-sized gaps prevent negative, overlapping, or
+    # unrelated date spans. Local days may be 23 or 25 hours around DST.
     for index in range(len(day_boundaries_ms) - 1):
-        if (
-            day_boundaries_ms[index]
-            >= day_boundaries_ms[index + 1]
-        ):
+        day_length_ms = (
+            day_boundaries_ms[index + 1]
+            - day_boundaries_ms[index]
+        )
+
+        if not 22 * 60 * 60 * 1000 <= day_length_ms <= 26 * 60 * 60 * 1000:
             return jsonify({
-                "error": (
-                    "Day boundaries must be "
-                    "in chronological order."
-                )
+                "error": "Invalid day boundaries."
             }), 400
 
-    # Convert browser-provided local midnights into UTC-naive datetimes to
-    # match how timestamps are stored by SQLite in this project.
-    utc_boundaries = [
-        datetime.fromtimestamp(
-            boundary / 1000,
-            tz=timezone.utc
-        ).replace(tzinfo=None)
-        for boundary in day_boundaries_ms
-    ]
+    try:
+        # Convert browser-provided local midnights into UTC-naive datetimes to
+        # match how timestamps are stored by SQLite in this project.
+        utc_boundaries = [
+            datetime.fromtimestamp(
+                boundary / 1000,
+                tz=timezone.utc
+            ).replace(tzinfo=None)
+            for boundary in day_boundaries_ms
+        ]
+
+    except (OverflowError, OSError, ValueError):
+        return jsonify({
+            "error": "Invalid day boundaries."
+        }), 400
 
     month_start = utc_boundaries[0]
     month_end = utc_boundaries[-1]
@@ -1404,31 +1459,6 @@ def monthly_study_analytics():
             subject_seconds.values()
         )
     }), 200
-
-@app.route("/calendar")
-def calendar():
-    # Render the protected calendar page. Its interactive behaviour is handled
-    # by the corresponding template and front-end scripts.
-    if "user_id" not in session:
-        return redirect(url_for("login"))
-
-    setup_redirect = subject_setup_redirect()
-    if setup_redirect is not None:
-        return setup_redirect
-
-    return render_template("calendar.html")
-
-@app.route("/users")
-def users():
-    # Development-only listing of the user records currently in the database.
-    all_users = User.query.all()
-
-    if not all_users:
-        return "No users found."
-
-    return "<br>".join(
-        [f"{user.user_id} - {user.username} - {user.user_email}" for user in all_users]
-    )
 
 def notepad_item_to_dictionary(item):
     """
